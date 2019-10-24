@@ -2,14 +2,12 @@ from gtts import gTTS
 import os
 from textblob import TextBlob
 import random
-from translate import Translator
-#from googletrans import Translator
+from googletrans import Translator
 from gpiozero import Servo
 from datetime import datetime
 import speech_recognition as sr
 from time import sleep
-# import RPi.GPIO as GPIO
-import re, math
+import math
 from collections import Counter
 
 ##---- Dataset hidden ----##
@@ -39,7 +37,6 @@ def speech_to_text():
 
 ############----------##########
 
-WORD = re.compile(r'\w+')
 
 
 def get_match(t1, t2):
