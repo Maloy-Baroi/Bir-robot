@@ -1,0 +1,232 @@
+from gtts import gTTS
+import os
+from textblob import TextBlob
+import random
+from translate import Translator
+#from googletrans import Translator
+from gpiozero import Servo
+from datetime import datetime
+import speech_recognition as sr
+from time import sleep
+# import RPi.GPIO as GPIO
+import re, math
+from collections import Counter
+
+##---- Dataset hidden ----##
+
+####---------Servo----------####
+head_servo = Servo(14)  # Physical mode 8
+left_servo = Servo(15)   # Physical mode 10
+right_servo = Servo(18)  # Physical mode 12
+#head_servo.mid()
+# left_servo.min()
+# right_servo.min()
+####----- take input from here --------####
+def speech_to_text():
+    say = sr.Recognizer()
+    d = "I don't understand"
+    with sr.Microphone() as sound:
+        print("I'm listening")
+        audio = say.listen(source=sound, phrase_time_limit=5)
+        try:
+            test_val = say.recognize_google(audio, language='bn')
+            test_val = test_val
+            print(type(test_val))
+            return test_val
+        except:
+            print(d)
+            return d
+
+############----------##########
+
+WORD = re.compile(r'\w+')
+
+
+def get_match(t1, t2):
+    return (t1 + t2)
+
+
+def text_to_vector(text):
+    words = WORD.findall(text)
+    return Counter(words)
+
+
+def responses(string):
+    text1 = string
+    text1 = text_to_hulululu(text1)
+    high = []
+    for i in range(len(questions)):
+        text2 = text_to_hulululu(questions[i])
+        kukkuruku = get_match(text1, text2)
+        high.append(kukkuruku)
+    m = max(high)
+    exceptional = "I try my best to answer your questions. But I am too young, so don't ask me complicated questions."
+    if m<=0.20:
+        print(m)
+        high_index = high.index(m)
+        print(high_index)
+        return exceptional
+    else:
+        
+        print(m)
+        high_index = high.index(m)
+        print(high_index)
+        print(questions[high_index])
+        return answer[high_index]
+    # else:
+    #     bb = "I am sorry but I am under development, i will try to answer this question next time"
+    #     return bb
+
+
+# servoH, servoRHU, servoRHD, servoLHU, servoLHD = Servo(14),  Servo(15),  Servo(18),  Servo(23),  Servo(24) # servo setup
+# servoH = Servo(10)
+def time():
+    now = datetime.now()
+    return now.hour
+
+
+### ---------- Main part of the code -------- ###
+
+# GPIO.setmode(GPIO.BCM)    # This code is for eyes led
+# GPIO.setwarnings(False)
+# GPIO.setup(18,GPIO.OUT)
+# print("LED on")
+# GPIO.output(18,GPIO.HIGH)
+# time.sleep(1)
+# print("LED off")
+# GPIO.output(18,GPIO.LOW)
+
+random_answer = ["Thanks to you",
+                 "Oh dear, your thinking is very beautiful. It is good to hear you.", "You speak very sweetly, it is good to hear you"]
+random_neg = ["Please, don't tell me something like this", "I didn't expect it from you", "I'm hurt by your words",
+              "If you think negative about me, I don't care."]
+# songs = ["majhe_majhe.mp3", "mor_priya.mp3"]
+time = time()
+
+trans = Translator(from_lang='en', to_lang='bn')
+trans_en = Translator(from_lang='bn', to_lang='en')
+#trans = Translator()
+#trans_en = Translator()
+if time > 1 and time <= 11:
+    sokal = (trans.translate("Good morning"))
+    tts = gTTS(text=sokal, lang='bn')
+elif time > 11 and time <= 14:
+    #print("Good noon")
+    dupur = (trans.translate("Good noon"))
+    tts = gTTS(text=dupur, lang='bn')
+elif time > 14 and time < 18:
+    bikel = (trans.translate("Good afternoon"))
+    tts = gTTS(text=bikel, lang='bn')
+elif time >= 18 and time <= 23:
+    sondha = (trans.translate("Good evening"))
+    tts = gTTS(text=sondha, lang='bn')
+else:
+    ekhn_onk_rat = (trans.translate("It's mid night."))
+    tts = gTTS(text=ekhn_onk_rat, lang='bn')
+
+tts.save("wishing_for_time.mp3")
+os.system("mpg321 wishing_for_time.mp3")
+# head_servo = GPIO.PWM(8, 50)  ## PWM Frequency
+# head_servo.start(0)
+
+
+s = speech_to_text()
+#s = input()
+while True:
+    # angle1 = 10
+    # duty1 = float(angle1) / 10 + 2.5  ## Angle To Duty cycle  Conversion
+    # angle2 = 160
+    # duty2 = float(angle2) / 10 + 2.5
+    # head_servo.ChangeDutyCycle(duty1)
+    # sleep(1)
+    # head_servo.ChangeDutyCycle(duty2)
+    # sleep(1)
+
+    if s == "I don't understand":
+        translation_donot = (trans.translate("I don't understand. Please tell me again")) 
+        tts_no_understand = gTTS(text=translation_donot, lang='bn')
+        tts_no_understand.save("Output.mp3")
+        os.system("mpg321 Output.mp3")
+        s = speech_to_text()
+        continue
+    else:
+        sentiment_translate = (trans_en.translate(s))
+        #print(type(sentiment_translate))
+        print(sentiment_translate)
+        
+        if sentiment_translate in wlcm_q:
+            wlcm = wlcm_ans[wlcm_q.index(sentiment_translate)]
+            wlcm_ans_trans = trans.translate(wlcm)
+            ttsx = gTTS(text=wlcm_ans_trans, lang='bn')
+            ttsx.save("Output.mp3")
+            os.system("mpg321 Output.mp3")
+        # print(pol)
+        # head_servo.ChangeDutyCycle(duty1)
+        # sleep(1)
+        # head_servo.ChangeDutyCycle(duty2)
+        # sleep(1)
+        else:
+            analysis = TextBlob(sentiment_translate)
+            pol = analysis.sentiment.polarity
+            if pol > 0:
+                head_servo.min()
+                sleep(1)
+                head_servo.mid()
+                sleep(1)
+                head_servo.max()
+                sleep(1)
+                head_servo.mid()
+                sleep(1)
+                output_text = random_answer[random.randrange(len(random_answer))]
+                translation_pos = (trans.translate(output_text))
+                print(translation_pos)
+                ttshigh = gTTS(text=translation_pos, lang='bn')
+                ttshigh.save("Output.mp3")
+                os.system("mpg321 Output.mp3")
+                #left_servo.mid() , right_servo.mid()
+                #sleep(0.7)
+                #left_servo.min(), right_servo.max()
+                #sleep(0.3)
+                #left_servo.mid() , right_servo.mid()
+                #sleep(0.7)
+                #left_servo.max(), right_servo.min()
+                #sleep(0.3)
+                #left_servo.min(), right_servo.max()
+            elif pol < 0:
+                ##### Real one #####
+                head_servo.min()
+                sleep(0.5)
+                head_servo.mid()
+                sleep(0.5)
+                head_servo.max()
+                sleep(0.5)
+                head_servo.mid()
+                sleep(0.5)
+                output_text = random_neg[random.randrange(len(random_neg))]
+                translation_neg = (trans.translate(output_text))
+                print(translation_neg)
+                head_servo.min()
+                sleep(0.5)
+                head_servo.mid()
+                sleep(0.5)
+                ttsless = gTTS(text=translation_neg, lang='bn')
+                ttsless.save("Output.mp3")
+                os.system("mpg321 Output.mp3")
+                head_servo.max()
+                sleep(0.5)
+                head_servo.mid()
+                sleep(0.5)
+                
+            elif pol == 0:
+                
+                translate_to_output = trans_en.translate(s)
+                output_text = (trans.translate(responses(translate_to_output)))
+                print(output_text)
+                ttsx = gTTS(text=output_text, lang='bn')
+                ttsx.save("Output.mp3")
+                os.system("mpg321 Output.mp3")
+                
+    s = speech_to_text()
+    #s = input()
+
+
